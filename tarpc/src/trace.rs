@@ -48,7 +48,39 @@ pub struct Context {
 /// same trace ID.
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde1_no_u128", serde(from = "TraceIdRepr", into = "TraceIdRepr"))]
 pub struct TraceId(u128);
+
+#[cfg(feature = "serde1_no_u128")]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]
+#[doc(hidden)]
+pub struct TraceIdRepr(u64, u64);
+
+#[cfg(feature = "serde1_no_u128")]
+#[doc(hidden)]
+impl From<TraceId> for TraceIdRepr {
+    fn from(v: TraceId) -> Self {
+        TraceIdRepr((v.0 >> 64) as u64, v.0 as u64)
+    }
+}
+
+#[cfg(feature = "serde1_no_u128")]
+#[doc(hidden)]
+impl From<TraceIdRepr> for TraceId {
+    fn from(v: TraceIdRepr) -> Self {
+        TraceId(((v.0 as u128) << 64) | (v.1 as u128))
+    }
+}
+
+#[test]
+#[cfg(test)]
+#[cfg(feature = "serde1_no_u128")]
+fn trace_id_repr_test() {
+    let trace_id = TraceId(0xFFFFFFFFFFFFFFFF0000000000000000);
+    let repr = TraceIdRepr::from(trace_id);
+    println!("{:#?}", repr);
+    assert_eq!(TraceId::from(repr), trace_id);
+}
 
 /// A 64-bit identifier of a span within a trace. The identifier is unique within the span's trace.
 #[derive(Debug, Default, PartialEq, Eq, Hash, Clone, Copy)]

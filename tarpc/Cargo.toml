@@ -16,6 +16,7 @@ description = "An RPC framework for Rust with a focus on ease of use."
 default = []
 
 serde1 = ["tarpc-plugins/serde1", "serde", "serde/derive"]
+serde1_no_u128 = ["serde1"]
 tokio1 = []
 serde-transport = ["tokio-serde", "tokio-util/codec"]
 tcp = ["tokio/net", "tokio/stream"]
